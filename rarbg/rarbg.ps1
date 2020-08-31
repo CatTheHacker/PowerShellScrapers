@@ -4,7 +4,7 @@ $i = 1
 # ? In seconds
 $WaitTime = 7
 # ? Cookie for anti-script security
-$Headers = @{'Cookie' = '__cfduid=d6fa76069c20272398b8defd82b13883d1598878677; gaDts48g=q8h5pp9t; tcc; aby=2; skt=QDVEUwbej6; skt=QDVEUwbej6; gaDts48g=q8h5pp9t; expla=1'}
+$Headers = @{'Cookie' = ''}
 $Torrents = [System.Collections.ArrayList]::New()
 $ProgressPreference = 'SilentlyContinue'
 do {
