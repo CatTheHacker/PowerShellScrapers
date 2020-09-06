@@ -3,7 +3,7 @@ $query = 'intruders'
 # ? In seconds
 $WaitTime = 7
 # ? Cookie for anti-script security
-$Headers = @{'Cookie' = '__cfduid=d64cbde95841585f77887b127a43bf0de1599410267; gaDts48g=q8h5pp9t; tcc; aby=2; skt=9YHUCerv7s; skt=9YHUCerv7s; gaDts48g=q8h5pp9t; expla=1'}
+$Headers = @{'Cookie' = ''}
 
 # ? User Agent
 $UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome
