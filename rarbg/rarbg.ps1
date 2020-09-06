@@ -28,7 +28,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 
 do {
-    [System.Console]::WriteLine("`e[38;5;11m Collecting links for `e[38;5;9m" + $query + "`e[38;5;11m, page `e[38;5;9m" + $i + "`e[0m")
+    [System.Console]::WriteLine("`e[38;5;11m Collecting links for `e[38;5;12m" + $query + "`e[38;5;11m, page `e[38;5;12m" + $i + "`e[0m")
     $Page = Invoke-WebRequest ('https://rarbgp2p.org/torrents.php?search=' + $query + '&page=' + $i) -Headers $Headers -UserAgent $UserAgent
 
     if($Page.Content -match 'Please wait while we try to verify your browser'){
@@ -39,8 +39,9 @@ do {
     $TorrentsTemp = ($page.links | Where-Object {$_.href -like '/torrent/*'} | Select-Object href).href -replace '#comments','' | Sort-Object -Unique
     $NextPage = ($page.links | Where-Object {$_.title -eq 'next page'} | Select-Object href).href -replace 'amp;','' | Sort-Object -Unique
 
+    [System.Console]::Write("`e[38;5;11m Adding ")
     ForEach($Torrent in $TorrentsTemp){
-        [System.Console]::WriteLine("`e[38;5;11m Adding `e[38;5;9m" + $Torrent + "`e[0m")
+        [System.Console]::Write("`e[38;5;9m" + ($Torrent -split '/')[2] + "`e[38;5;11m, `e[0m")
         [void]$Torrents.Add($Torrent)
     }
 
@@ -73,7 +74,7 @@ ForEach($Torrent in $Torrents){
 
     $TorrentFilePath = Join-Path $Root $TorrentFileName
 
-    [System.Console]::WriteLine("`e[38;5;11m Found `e[38;5;9m" + $TorrentFileName + "`e[38;5;11m, url `e[38;5;9m" + $TorrentFile.href + "`e[0m")
+    [System.Console]::WriteLine("`e[38;5;11m Found `e[38;5;12m" + $TorrentFileName + "`e[38;5;11m, url `e[38;5;12m" + $TorrentFile.href + "`e[0m")
 
     For($r = $WaitTime;$r -gt 0; $r--){
         [System.Console]::Write('.')
