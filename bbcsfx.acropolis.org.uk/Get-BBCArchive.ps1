@@ -1,6 +1,14 @@
 function Get-BBCArchive {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [int32]
+        $Threads = 6,
+        [Parameter()]
+        [string]
+        $Root = (Get-Location).Path
+    )
     $WebClient = [System.Net.WebClient]::New()
-    $Root = (Get-Location).Path
     $WebClient.DownloadFile('http://bbcsfx.acropolis.org.uk/assets/BBCSoundEffects.csv', 'BBCSoundEffects.csv')
     $Data = Import-Csv (Join-Path $Root 'BBCSoundEffects.csv')
     $Data | ForEach-Object -Parallel {
@@ -14,5 +22,5 @@ function Get-BBCArchive {
             $WebClient.DownloadFile($Uri, $Path)
         }
         $WebClient.Dispose()
-    } -ThrottleLimit 6
+    } -ThrottleLimit $Threads
 }
