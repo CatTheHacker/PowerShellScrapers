@@ -6,36 +6,56 @@ function Get-BBCArchive {
         $Threads = 6,
         [Parameter()]
         [string]
-        $Root = (Get-Location).Path
+        $Root = $PWD.Path
     )
     $WebClient = [System.Net.WebClient]::New()
-    if(!(Test-Path (Join-Path $Root 'BBCSoundEffects.csv'))){
-        $WebClient.DownloadFile('http://bbcsfx.acropolis.org.uk/assets/BBCSoundEffects.csv', (Join-Path $Root 'BBCSoundEffects.csv'))
+    $CSVPath = [System.Management.Automation.SessionState]::New().Path.Combine($Root, 'BBCSoundEffects.csv')
+    if(!([System.IO.File]::Exists($CSV))){
+        $WebClient.DownloadFile('http://bbcsfx.acropolis.org.uk/assets/BBCSoundEffects.csv', $CSVPath)
     }
-    $Data = Import-Csv (Join-Path $Root 'BBCSoundEffects.csv')
+    $Data = Import-Csv $CSVPath | Select-Object location, category
     if($PSVersionTable.PSVersion.Major -gt 6){
         $Data | ForEach-Object -Parallel {
-            $Path = Join-Path $using:Root $_.location
-            [System.Console]::WriteLine('Filename: ' + $_.location + ', Category: ' + $_.category)
-            $Uri = ('http://bbcsfx.acropolis.org.uk/assets/' + $_.location)
-            if(Test-Path $_.location){
-                continue
+            $Item = $_
+            [System.Console]::WriteLine('Filename: {0}, Category: {1}', $Item.location, $Item.category)
+            $FilePath = [System.Management.Automation.SessionState]::New().Path.Combine($using:Root, $Item.location)
+            $FileUri = [System.String]::Format('http://bbcsfx.acropolis.org.uk/assets/{0}', $Item.location)
+            $Client = [System.Net.WebClient]::New()
+            if([System.IO.File]::Exists($FilePath)){
+                $Request = [System.Net.WebRequest]::Create($FileUri)
+                $Request.Method = 'HEAD'
+                $Response = $Request.GetResponse()
+                if([System.IO.FileInfo]::new($FilePath).Length -ne $Response.ContentLength){
+                    [System.Console]::WriteLine('Found existing file ({0}), attempting to finish download.', $Item.location)
+                    #Invoke-WebRequest -Uri $FileUri -OutFile $FilePath -Resume
+                    [System.Console]::WriteLine('File resume currently not supported. Re-downloading.')
+                    $Client.DownloadFile($FileUri, $FilePath)
+                }
             } else{
-                $WebClient = [System.Net.WebClient]::New()
-                $WebClient.DownloadFile($Uri, $Path)
+                $Client.DownloadFile($FileUri, $FilePath)
             }
-            $WebClient.Dispose()
+            $Client.Dispose()
+            [System.Console]::WriteLine('File {0} is complete.', $Item.location)
         } -ThrottleLimit $Threads
     } else{
         foreach($Item in $Data){
-            $Path = Join-Path $Root $Item.location
-            [System.Console]::WriteLine('Filename: ' + $Item.location + ', Category: ' + $Item.category)
-            $Uri = ('http://bbcsfx.acropolis.org.uk/assets/' + $Item.location)
-            if(Test-Path $Item.location){
-                continue
+            [System.Console]::Write('Filename: {0}, Category: {1}...', $Item.location, $Item.category)
+            $FilePath = [System.Management.Automation.SessionState]::New().Path.Combine($Root, $Item.location)
+            $FileUri = [System.String]::Format('http://bbcsfx.acropolis.org.uk/assets/{0}', $Item.location)
+            if([System.IO.File]::Exists($FilePath)){
+                $Request = Invoke-WebRequest -Uri $FileUri -Method Head
+                if([System.IO.FileInfo]::new($FilePath).Length -ne $Request.Headers.'Content-Length'){
+                    [System.Console]::WriteLine('Found existing file ({0}), attempting to finish download.', $Item.location)
+                    Invoke-WebRequest -Uri $FileUri -OutFile $FilePath
+                    [System.Console]::WriteLine('Finished.')
+                } else{
+                    [System.Console]::WriteLine('Skipped.')
+                }
             } else{
-                $WebClient.DownloadFile($Uri, $Path)
+                $WebClient.DownloadFile($FileUri, $FilePath)
+                [System.Console]::WriteLine('Finished.')
             }
+
         }
     }
     $WebClient.Dispose()
