@@ -46,11 +46,7 @@ function Get-BBCArchive {
                 $Request = Invoke-WebRequest -Uri $FileUri -Method Head
                 if([System.IO.FileInfo]::new($FilePath).Length -ne $Request.Headers.'Content-Length'){
                     [System.Console]::WriteLine('Found existing file ({0}), attempting to finish download.', $Item.location)
-                    if($PSVersionTable.PSVersion.Major -gt 6){
-                        Invoke-WebRequest -Uri $FileUri -OutFile $FilePath -Resume
-                    } else{
-                        $WebClient.DownloadFile($FileUri, $FilePath)
-                    }
+                    $WebClient.DownloadFile($FileUri, $FilePath)
                     [System.Console]::WriteLine('Finished.')
                 } else{
                     [System.Console]::WriteLine('Skipped.')
